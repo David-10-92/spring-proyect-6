@@ -1,5 +1,7 @@
 package com.springproyect6.service.impl;
 
+import com.springproyect6.persistence.entity.Comment;
+import com.springproyect6.persistence.repository.CommetRepository;
 import com.springproyect6.service.dtos.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -8,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.springproyect6.service.RickAndMortyApiService;
@@ -25,6 +28,12 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
     //RestTemplate es una clase de Spring que nos permite realizar solicitudes HTTP
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    CommetRepository commetRepository;
 
     @Override
     public Page<CharacterDTO> fetchCharacterPage(Pageable pageable, SearchFormDTO searchFormDTO) throws UnsupportedEncodingException {
@@ -110,7 +119,7 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
 
         // Inicializar un nuevo objeto CharacterIdDTO para almacenar los detalles del personaje
         CharacterIdDTO characterIdDTO = new CharacterIdDTO();
-
+        characterIdDTO.setUrl(url);
         // Asignar los valores de los atributos del objeto CharacterIdDTO a partir de los datos del objeto JSON
         characterIdDTO.setId(characterObject.getLong("id"));
         characterIdDTO.setImage(characterObject.getString("image"));
@@ -137,5 +146,48 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
 
         // Devolver el objeto CharacterIdDTO completo con todos los detalles del personaje
         return characterIdDTO;
+    }
+
+    /*public void saveRating(@RequestBody CommentDTO comentDTO, Long id) {
+
+        String characterName = comentDTO.getNameCharacter();
+        int rating = comentDTO.getValoration();
+        String comment = comentDTO.getComment();
+
+        // Aquí defines la sentencia SQL para insertar los datos en la tabla
+        String sql = "INSERT INTO comentarios (id_personaje,nombre_usuario, valoracion, comentario) VALUES (?, ?, ?,?)";
+
+        // Luego ejecutas la sentencia SQL utilizando JDBC
+        jdbcTemplate.update(sql, id, characterName, rating, comment);
+
+    }*/
+
+    public void createComment(CommentDTO commentDTO){
+
+        Comment comment = new Comment();
+        //comment.setId(id);
+        comment.setName(commentDTO.getNameCharacter());
+        comment.setComment(commentDTO.getComment());
+        comment.setValoration(commentDTO.getValoration());
+        commetRepository.save(comment);
+    }
+
+    public Long extractCharacterIdFromUrl(String url) {
+        // Dividir la URL en segmentos utilizando "/" como delimitador
+        String[] segments = url.split("/");
+
+        // Obtener el último segmento de la URL, que debería ser el ID del personaje
+        String lastSegment = segments[segments.length - 1];
+
+        // Comprobar si el último segmento contiene más de un número
+        String[] numbers = lastSegment.split("\\D+");
+
+        // Si hay al menos dos números, devolver el segundo número como ID del personaje
+        if (numbers.length >= 2) {
+            return Long.parseLong(numbers[1]);
+        } else {
+            // Si solo hay un número o ningún número, devolver el último segmento como ID del personaje
+            return Long.parseLong(lastSegment);
+        }
     }
 }

@@ -20,4 +20,5 @@ public class CharacterIdDTO {
     private String origin;
     private String location;
     private int episodes;
+    private String url;
 }
