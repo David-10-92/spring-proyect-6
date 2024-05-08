@@ -59,14 +59,20 @@ public class CharacterController {
     }
 
     @GetMapping("/form-rating")
-    public String mostrarFormulario(Model model) {
-        model.addAttribute("comment",new CommentDTO());
+    public String mostrarFormulario(String url, Model model) {
+        CharacterIdDTO character = rickAndMortyApiService.getCharacterDetails(url);
+        CommentDTO dto = new CommentDTO();
+        dto.setUrl(url);                                            // ¿Para qué querrías la URL aquí?
+        dto.setValoration(1);                                       // Lo mas bajo por defecto
+        dto.setNameCharacter(character.getName());                  // Magia
+        dto.setIdChatacter(character.getId());                      // Ojo que el nombre del atributo es 'idChatacter'
+        model.addAttribute("comment",dto);              // Si llamas "comment" al dto, tendrás que usarlo en la plantilla
         return "assessment"; // Nombre de la plantilla Thymeleaf que contiene el formulario
     }
 
     @PostMapping("/save-rating")
     public String saveRating(@ModelAttribute CommentDTO commentDTO) {
         rickAndMortyApiService.createComment(commentDTO);
-        return "redirect:/character-profile";
+        return "redirect:/view-character";
     }
 }
