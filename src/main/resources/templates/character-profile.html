@@ -3,25 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <title>Ficha del Personaje</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilo adicional para la imagen */
+        .character-image {
+            max-width: 200px;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
-<div>
+<div class="container">
     <div>
-        <h1>Ficha del Personaje</h1>
+        <h1 class="mt-5">Ficha del Personaje</h1>
     </div>
     <div>
-        <img th:src="${character.image}" alt="Imagen del personaje">
-        <h2 th:text="${character.name}"></h2>
+        <img th:src="${character.image}" alt="Imagen del personaje" class="img-fluid rounded mx-auto d-block character-image mb-3">
+        <h2 th:text="${character.name}" class="text-center"></h2>
+    </div>
+    <div>
         <p>ID: <span th:text="${character.id}"></span></p>
         <p>Estado: <span th:text="${character.status}"></span></p>
         <p>Tipo: <span th:text="${character.types}"></span></p>
         <p>Género: <span th:text="${character.gender}"></span></p>
         <p>Lugar de origen: <span th:text="${character.origin}"></span></p>
         <p>Último lugar conocido: <span th:text="${character.location}"></span></p>
-        <p>Valoración media: <span th:text="${character.episodes}"></span></p>
-        <p>Valoración de cada usuario: <span th:text="${character.episodes}"></span></p>
-        <a th:href="@{'/form-rating?url=' + ${character.url}}">Añadir valoración</a>
+        <p>Episodios: <span th:text="${character.episodes}"></span></p>
+    </div>
+    <div>
+        <p>Valoración media: <span th:text="${averageValoration != null ? averageValoration : '0'}"></span></p>
+        <!-- Añadir valoraciones si existen -->
+        <div th:if="${character.valorationDTOList}">
+            <h3>Valoraciones:</h3>
+            <ul class="list-group">
+                <li th:each="valoration : ${character.valorationDTOList}" class="list-group-item">
+                    <p>Nombre: <span th:text="${valoration.name}"></span></p>
+                    <p>Valoración: <span th:text="${valoration.valoration}"></span></p>
+                    <p>Comentario: <span th:text="${valoration.comment}"></span></p>
+                </li>
+            </ul>
+        </div>
+        <a th:href="@{'/form-rating?url=' + ${character.id}}" class="btn btn-primary mt-3">Añadir valoración</a>
     </div>
 </div>
+<!-- Bootstrap JS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

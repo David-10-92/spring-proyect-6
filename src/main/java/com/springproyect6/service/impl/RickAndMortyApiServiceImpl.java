@@ -6,6 +6,7 @@ import com.springproyect6.service.dtos.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.springproyect6.service.RickAndMortyApiService;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -119,7 +121,6 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
 
         // Inicializar un nuevo objeto CharacterIdDTO para almacenar los detalles del personaje
         CharacterIdDTO characterIdDTO = new CharacterIdDTO();
-        characterIdDTO.setUrl(url);
         // Asignar los valores de los atributos del objeto CharacterIdDTO a partir de los datos del objeto JSON
         characterIdDTO.setId(characterObject.getLong("id"));
         characterIdDTO.setImage(characterObject.getString("image"));
@@ -148,46 +149,53 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
         return characterIdDTO;
     }
 
-    /*public void saveRating(@RequestBody CommentDTO comentDTO, Long id) {
+    public List<ValorationDTO> getValorationsByCharacterId(Long characterId) {
+        // Consulta SQL para obtener las valoraciones por ID de personaje
+        String sql = "SELECT name, valoration, comment FROM comentarios WHERE id_character = ?";
 
-        String characterName = comentDTO.getNameCharacter();
-        int rating = comentDTO.getValoration();
-        String comment = comentDTO.getComment();
+        try {
+            // Ejecutar la consulta y obtener los resultados
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, characterId);
 
-        // Aquí defines la sentencia SQL para insertar los datos en la tabla
-        String sql = "INSERT INTO comentarios (id_personaje,nombre_usuario, valoracion, comentario) VALUES (?, ?, ?,?)";
+            // Inicializar una lista para almacenar las valoraciones encontradas
+            List<ValorationDTO> valorations = new ArrayList<>();
 
-        // Luego ejecutas la sentencia SQL utilizando JDBC
-        jdbcTemplate.update(sql, id, characterName, rating, comment);
+            // Iterar sobre los resultados y crear objetos ValorationDTO
+            for (Map<String, Object> row : rows) {
+                ValorationDTO valorationDTO = new ValorationDTO();
+                valorationDTO.setName((String) row.get("name"));
+                valorationDTO.setValoration((int) row.get("valoration"));
+                valorationDTO.setComment((String) row.get("comment"));
+                valorations.add(valorationDTO);
+            }
 
-    }*/
+            // Devolver la lista de valoraciones
+            return valorations;
+        } catch (EmptyResultDataAccessException e) {
+            // Manejar el caso en que no hay valoraciones para el personaje
+            return new ArrayList<>();
+        }
+    }
+
+    public Double getAverageValorationByCharacterId(Long characterId) {
+        // Consulta SQL para obtener la media de las valoraciones por ID de personaje
+        String sql = "SELECT AVG(valoration) AS avg_valoration FROM comentarios WHERE id_character = ?";
+        // Ejecutar la consulta y obtener el resultado
+        Map<String, Object> result = jdbcTemplate.queryForMap(sql, characterId);
+        Object avgValorationObject = result.get("avg_valoration");
+        // Obtener la media de las valoraciones
+        BigDecimal averageValoration = (BigDecimal) result.get("avg_valoration");
+        // Convertir BigDecimal a Double
+        return averageValoration != null ? averageValoration.doubleValue() : 0;
+    }
+
 
     public void createComment(CommentDTO commentDTO){
-
         Comment comment = new Comment();
-        //comment.setId(id);
+        comment.setIdCharacter(commentDTO.getIdCharacter());
         comment.setName(commentDTO.getNameCharacter());
         comment.setComment(commentDTO.getComment());
         comment.setValoration(commentDTO.getValoration());
         commetRepository.save(comment);
-    }
-
-    public Long extractCharacterIdFromUrl(String url) {
-        // Dividir la URL en segmentos utilizando "/" como delimitador
-        String[] segments = url.split("/");
-
-        // Obtener el último segmento de la URL, que debería ser el ID del personaje
-        String lastSegment = segments[segments.length - 1];
-
-        // Comprobar si el último segmento contiene más de un número
-        String[] numbers = lastSegment.split("\\D+");
-
-        // Si hay al menos dos números, devolver el segundo número como ID del personaje
-        if (numbers.length >= 2) {
-            return Long.parseLong(numbers[1]);
-        } else {
-            // Si solo hay un número o ningún número, devolver el último segmento como ID del personaje
-            return Long.parseLong(lastSegment);
-        }
     }
 }

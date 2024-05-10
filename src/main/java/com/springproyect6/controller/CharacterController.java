@@ -1,6 +1,7 @@
 package com.springproyect6.controller;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.springproyect6.service.dtos.*;
@@ -30,43 +31,52 @@ public class CharacterController {
     }
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
     private RickAndMortyApiService rickAndMortyApiService;
 
     @GetMapping("/search")
-    public String searchHtml(Model model) {
-        model.addAttribute("searchFormDTO",new SearchFormDTO());
+    public String showSearchForm(Model model) {
+        model.addAttribute("search", new SearchFormDTO());
         return "search";
     }
 
-    @PostMapping(path ="/search",consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public String searchCharacters(@ModelAttribute SearchFormDTO searchFormDTO, Model model,@RequestParam(defaultValue = "0") int page) throws UnsupportedEncodingException {
-        Page<CharacterDTO> characterPage = rickAndMortyApiService.fetchCharacterPage(PageRequest.of(page,searchFormDTO.getPageSize()), searchFormDTO);
-        model.addAttribute("results",characterPage.getContent());
+    @PostMapping("/results")
+    public String searchCharacters(@ModelAttribute SearchFormDTO searchFormDTO, Model model, @RequestParam(defaultValue = "0") int page) throws UnsupportedEncodingException {
+        Page<CharacterDTO> characterPage = rickAndMortyApiService.fetchCharacterPage(PageRequest.of(page, searchFormDTO.getPageSize()), searchFormDTO);
+        model.addAttribute("results", characterPage.getContent());
         model.addAttribute("totalPages", characterPage.getTotalPages());
-        model.addAttribute("currentPage", page);
+        model.addAttribute("currentPage", characterPage.getNumber());
         model.addAttribute("totalElements", characterPage.getTotalElements());
         return "characters";
     }
 
     @GetMapping("/view-character")
-    public String verFicha(@RequestParam("url") String url, Model model) {
+    public String viewFichaByUrl(@RequestParam("url") String url, Model model) {
         CharacterIdDTO characterIdDTO = rickAndMortyApiService.getCharacterDetails(url);
+        // Obtener las valoraciones del personaje por su ID
+        Long characterId = characterIdDTO.getId();
+        List<ValorationDTO> valorations = rickAndMortyApiService.getValorationsByCharacterId(characterId);
+        Double averageValoration  = rickAndMortyApiService.getAverageValorationByCharacterId(characterId);
+        // Añadir las valoraciones al modelo
+        characterIdDTO.setValorationDTOList(valorations);
+        characterIdDTO.setMedia(averageValoration );
         model.addAttribute("character", characterIdDTO);
+        model.addAttribute("averageValoration", averageValoration != null ? averageValoration : 0.0);
         return "character-profile";
     }
 
     @GetMapping("/form-rating")
-    public String mostrarFormulario(Model model) {
+    public String viewForm(@RequestParam("url") String url,Model model) {
+        //Convertir la URL de String a long (asumiendo que la URL representa un ID numérico)
+        int idCharacter = Integer.parseInt(url);
         model.addAttribute("comment",new CommentDTO());
+        model.addAttribute("idCharacter",idCharacter);
         return "assessment"; // Nombre de la plantilla Thymeleaf que contiene el formulario
     }
 
     @PostMapping("/save-rating")
     public String saveRating(@ModelAttribute CommentDTO commentDTO) {
+        // Establece el ID del personaje en el DTO del comentario
         rickAndMortyApiService.createComment(commentDTO);
-        return "redirect:/character-profile";
+        return "redirect:/view-character";
     }
 }

@@ -1,25 +1,38 @@
-<div class="container" xmlns:th="http://www.w3.org/1999/xhtml">
-    <h1 class="mb-4">Valoración del Personaje</h1>
-    <form action="/save-rating" method="post">
-        <!-- Campo oculto para el ID del personaje -->
-        <input type="hidden" id="idCharacter" name="idCharacter" value="${idCharacter}">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ficha del Personaje</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div>
 
-        <!-- Agregar campo oculto para la URL -->
-        <input type="hidden" id="url" name="url" value="${character.url}">
-
-        <div class="mb-3">
-            <label for="nameCharacter" class="form-label">Nombre del Personaje:</label>
-            <input type="text" id="nameCharacter" name="nameCharacter" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label for="valoration" class="form-label">Valoración:</label>
-            <input type="number" id="valoration" name="valoration" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label for="comment" class="form-label">Comentario:</label>
-            <textarea id="comment" name="comment" class="form-control"></textarea>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Enviar</button>
-    </form>
+    <div class="container" xmlns:th="http://www.w3.org/1999/xhtml">
+        <h1 class="mb-4">Valoración del personaje</h1>
+        <form action="/save-rating" method="post">
+            <!-- Campo oculto para el ID del personaje con valor por defecto de idCharacter -->
+            <input type="hidden" id="idCharacter" name="idCharacter" th:value="${idCharacter}">
+            <div class="mb-3">
+                <label for="nameCharacter" class="form-label">Nombre del autor:</label>
+                <input type="text" id="nameCharacter" class="form-control" th:field="${comment.nameCharacter}" required>
+            </div>
+            <div class="mb-3">
+                <label for="valoration" class="form-label">Valoración:</label>
+                <input type="number" id="valoration" class="form-control" th:field="${comment.valoration}" required>
+            </div>
+            <div class="mb-3">
+                <label for="comment" class="form-label">Comentario:</label>
+                <textarea id="comment" name="comment" class="form-control"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+    </div>
 </div>
+<!-- Bootstrap JS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

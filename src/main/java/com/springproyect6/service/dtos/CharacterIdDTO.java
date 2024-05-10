@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -20,5 +22,7 @@ public class CharacterIdDTO {
     private String origin;
     private String location;
     private int episodes;
+    private double media;
+    private List<ValorationDTO> valorationDTOList;
     private String url;
 }
