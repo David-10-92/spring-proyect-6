@@ -149,6 +149,32 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
         return characterIdDTO;
     }
 
+    private boolean meetsSearchCriteria(JSONObject characterObject, SearchFormDTO searchFormDTO) {
+        // Obtener los valores de los filtros de búsqueda del objeto SearchFormDTO
+        String nameFilter = searchFormDTO.getName();
+        String statusFilter = searchFormDTO.getStatus();
+        String speciesFilter = searchFormDTO.getSpecies();
+        String typeFilter = searchFormDTO.getType();
+        String genderFilter = searchFormDTO.getGender();
+
+        // Obtener los valores del personaje del objeto JSONObject
+        String name = characterObject.optString("name", "");
+        String status = characterObject.optString("status", "");
+        String species = characterObject.optString("species", "");
+        String type = characterObject.optString("type", "");
+        String gender = characterObject.optString("gender", "");
+
+        // Verificar si el personaje cumple con los criterios de búsqueda
+        boolean nameMatches = nameFilter == null || name.isEmpty() || name.equalsIgnoreCase(nameFilter);
+        boolean statusMatches = statusFilter == null || status.isEmpty() || status.equalsIgnoreCase(statusFilter);
+        boolean speciesMatches = speciesFilter == null || species.isEmpty() || species.equalsIgnoreCase(speciesFilter);
+        boolean typeMatches = typeFilter == null || type.isEmpty() || type.equalsIgnoreCase(typeFilter);
+        boolean genderMatches = genderFilter == null || gender.isEmpty() || gender.equalsIgnoreCase(genderFilter);
+
+        // Devolver true si el personaje cumple con todos los criterios de búsqueda, de lo contrario, devolver false
+        return nameMatches && statusMatches && speciesMatches && typeMatches && genderMatches;
+    }
+
     public List<ValorationDTO> getValorationsByCharacterId(Long characterId) {
         // Consulta SQL para obtener las valoraciones por ID de personaje
         String sql = "SELECT name, valoration, comment FROM comentarios WHERE id_character = ?";
@@ -198,4 +224,16 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
         comment.setValoration(commentDTO.getValoration());
         commetRepository.save(comment);
     }
+
+
+    public  String getLastNumbersFromUrl(String url) {
+        // Divide la URL en partes usando "/" como separador
+        String[] partes = url.split("/");
+
+        // Selecciona el último elemento de la matriz resultante
+        String ultimoNumero = partes[partes.length - 1];
+
+        return ultimoNumero;
+    }
+
 }
