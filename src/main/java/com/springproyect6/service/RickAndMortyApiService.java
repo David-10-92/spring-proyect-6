@@ -15,4 +15,5 @@ public interface RickAndMortyApiService {
     void createComment(CommentDTO commentDTO);
     List<ValorationDTO> getValorationsByCharacterId(Long characterId);
     Double getAverageValorationByCharacterId(Long characterId);
+    String getLastNumbersFromUrl(String urlString);
 }
