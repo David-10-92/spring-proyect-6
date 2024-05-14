@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.IdGeneratorType;
-import org.hibernate.annotations.ValueGenerationType;
-
-import java.sql.Timestamp;
 
 @Getter
 @Setter
