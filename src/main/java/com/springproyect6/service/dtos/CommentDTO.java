@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class CommentDTO {
-    private Long idCharacter;
+    private Integer idCharacter;
     private String nameCharacter;
     private String comment;
     private int valoration;
