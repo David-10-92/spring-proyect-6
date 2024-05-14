@@ -12,6 +12,7 @@
     <div class="container" xmlns:th="http://www.w3.org/1999/xhtml">
         <h1 class="mb-4">Valoración del personaje</h1>
         <form action="/save-rating" method="post">
+            <input type="hidden" name="characterUrl" th:value="${characterUrl}">
             <!-- Campo oculto para el ID del personaje con valor por defecto de idCharacter -->
             <input type="hidden" id="idCharacter" name="idCharacter" th:value="${idCharacter}">
             <div class="mb-3">
