@@ -23,9 +23,9 @@
             <td th:text="${result.name}"></td>
             <td th:text="${result.status}"></td>
             <td th:text="${result.species}"></td>
-            <td th:text="${result.origin}"></td>
+            <td th:text="${result.origin.name}"></td>
             <td>
-                <a th:href="@{'/view-character?url=' + ${result.url}}" class="btn btn-primary" role="button" target="_blank">
+                <a th:href="@{'/view-character?id=' + ${result.id}}" class="btn btn-primary" role="button" target="_blank">
                     Ver ficha
                 </a>
             </td>

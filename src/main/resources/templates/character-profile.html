@@ -25,26 +25,29 @@
     <div>
         <p>ID: <span th:text="${character.id}"></span></p>
         <p>Estado: <span th:text="${character.status}"></span></p>
-        <p>Tipo: <span th:text="${character.types}"></span></p>
+        <p>Tipo: <span th:text="${character.type}"></span></p>
         <p>Género: <span th:text="${character.gender}"></span></p>
-        <p>Lugar de origen: <span th:text="${character.origin}"></span></p>
-        <p>Último lugar conocido: <span th:text="${character.location}"></span></p>
-        <p>Episodios: <span th:text="${character.episodes}"></span></p>
+        <p>Lugar de origen: <span th:text="${character.origin.name}"></span></p>
+        <p>Último lugar conocido: <span th:text="${character.location.name}"></span></p>
+        <p>Episodios:</p>
+        <select class="form-control" multiple>
+            <option th:each="episode : ${character.episode}" th:text="${episode}"></option>
+        </select>
     </div>
     <div>
         <p>Valoración media: <span th:text="${averageValoration != null ? averageValoration : '0'}"></span></p>
         <!-- Añadir valoraciones si existen -->
-        <div th:if="${character.valorationDTOList}">
+        <div th:if="${valorations}">
             <h3>Valoraciones:</h3>
             <ul class="list-group">
-                <li th:each="valoration : ${character.valorationDTOList}" class="list-group-item">
+                <li th:each="valoration : ${valorations}" class="list-group-item">
                     <p>Nombre: <span th:text="${valoration.name}"></span></p>
                     <p>Valoración: <span th:text="${valoration.valoration}"></span></p>
                     <p>Comentario: <span th:text="${valoration.comment}"></span></p>
                 </li>
             </ul>
         </div>
-        <a th:href="@{'/form-rating?url=' + ${character.url}}" class="btn btn-primary mt-3">Añadir valoración</a>
+        <a th:href="@{'/form-rating?id=' + ${character.id}}" class="btn btn-primary mt-3">Añadir valoración</a>
     </div>
 </div>
 <!-- Bootstrap JS -->

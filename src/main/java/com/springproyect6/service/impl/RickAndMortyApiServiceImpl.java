@@ -1,22 +1,18 @@
 package com.springproyect6.service.impl;
 
+import com.springproyect6.persistence.apimodel.Character;
+import com.springproyect6.persistence.apimodel.CharacterList;
 import com.springproyect6.persistence.entity.Comment;
 import com.springproyect6.persistence.repository.CommetRepository;
 import com.springproyect6.service.dtos.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.springproyect6.service.RickAndMortyApiService;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -38,41 +34,25 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
     CommetRepository commetRepository;
 
     @Override
-    public Page<CharacterDTO> fetchCharacterPage(Pageable pageable, SearchFormDTO searchFormDTO) throws UnsupportedEncodingException {
-        ResponseEntity<String> responseEntity = getPage(pageable,searchFormDTO);
-        if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()) {
-            // Manejar la respuesta no exitosa, por ejemplo, lanzar una excepción o devolver una página vacía
-            return new PageImpl<>(Collections.emptyList(), pageable, 0);
-        }
-
-        JSONObject responseObject = new JSONObject(responseEntity.getBody());
-        JSONArray resultsArray = responseObject.getJSONArray("results");
-
-        List<CharacterDTO> characters = mapToCharacterDTOList(resultsArray);
-
-        int totalCharacters = responseObject.getJSONObject("info").getInt("count");
-        return new PageImpl<>(characters, pageable, totalCharacters);
+    public CharacterList fetchCharacterPage(SearchFormDTO searchFormDTO) throws UnsupportedEncodingException {
+        return getPage(searchFormDTO);
     }
 
-    private ResponseEntity<String> getPage(Pageable pageable, SearchFormDTO searchFormDTO) throws UnsupportedEncodingException {
+    private CharacterList getPage(SearchFormDTO searchFormDTO) throws UnsupportedEncodingException {
         // Obtener el número de página actual
-        int page = pageable.getPageNumber();
-
+        int page = searchFormDTO.getPage();
         // Inicializar un StringBuilder para construir la URL
         StringBuilder urlBuilder = new StringBuilder(API_URL).append("?page=").append(page + 1);
-
         // Agregar parámetros de búsqueda si existen en el SearchFormDTO
         addQueryParam(urlBuilder, "name", searchFormDTO.getName());
         addQueryParam(urlBuilder, "status", searchFormDTO.getStatus());
         addQueryParam(urlBuilder, "species", searchFormDTO.getSpecies());
         addQueryParam(urlBuilder, "type", searchFormDTO.getType());
         addQueryParam(urlBuilder, "gender", searchFormDTO.getGender());
-
         // Convertir el StringBuilder a String representando la URL final
         String url = urlBuilder.toString();
-
         // Realizar una solicitud GET a la URL y devolver el ResponseEntity
-        return restTemplate.getForEntity(url, String.class);
+        return restTemplate.getForEntity(url, CharacterList.class).getBody();
     }
 
     // Método para agregar un parámetro de consulta a la URL si el valor del parámetro no es nulo o vacío
@@ -89,93 +69,13 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
         return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
     }
 
-    private List<CharacterDTO> mapToCharacterDTOList(JSONArray resultsArray) {
-        List<CharacterDTO> characters = new ArrayList<>();
-        for (int i = 0; i < resultsArray.length(); i++) {
-            JSONObject characterObject = resultsArray.getJSONObject(i);
-            CharacterDTO characterDTO = mapToCharacterDTO(characterObject);
-            characters.add(characterDTO);
-        }
-        return characters;
+    public Character getCharacterDetails(Integer id) {
+        String url = String.format("%s/%d",API_URL,id); // Esto simplemente concatena y reemplaza
+        ResponseEntity<Character> response = restTemplate.getForEntity(url, Character.class); // Faltaría la validación de excepciones
+        return response.getBody();
     }
 
-    private CharacterDTO mapToCharacterDTO(JSONObject characterObject) {
-        CharacterDTO characterDTO = new CharacterDTO();
-        characterDTO.setName(characterObject.getString("name"));
-        characterDTO.setStatus(characterObject.getString("status"));
-        characterDTO.setSpecies(characterObject.getString("species"));
-        JSONObject origenObject = characterObject.getJSONObject("origin");
-        characterDTO.setOrigin(origenObject.getString("name"));
-        characterDTO.setUrl(characterObject.getString("url"));
-
-        return characterDTO;
-    }
-
-
-    public CharacterIdDTO getCharacterDetails(String url) {
-        // Realizar una solicitud GET a la URL especificada y obtener la respuesta
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
-
-        // Convertir la respuesta a un objeto JSON para acceder a los datos
-        JSONObject characterObject = new JSONObject(responseEntity.getBody());
-
-        // Inicializar un nuevo objeto CharacterIdDTO para almacenar los detalles del personaje
-        CharacterIdDTO characterIdDTO = new CharacterIdDTO();
-        // Asignar los valores de los atributos del objeto CharacterIdDTO a partir de los datos del objeto JSON
-        characterIdDTO.setId(characterObject.getLong("id"));
-        characterIdDTO.setImage(characterObject.getString("image"));
-        characterIdDTO.setName(characterObject.getString("name"));
-        characterIdDTO.setStatus(characterObject.getString("status"));
-
-        // Verificar si el objeto JSON contiene la clave "types"
-        if (characterObject.has("types")) {
-            // Si la clave "types" existe, asignar su valor al atributo "types" del objeto CharacterIdDTO
-            characterIdDTO.setTypes(characterObject.getString("types"));
-        } else {
-            // Si la clave "types" no existe, asignar un valor predeterminado o manejar el caso según sea necesario
-            characterIdDTO.setTypes("Sin tipo");
-        }
-
-        // Asignar los valores de los atributos restantes del objeto CharacterIdDTO
-        characterIdDTO.setGender(characterObject.getString("gender"));
-        characterIdDTO.setOrigin(characterObject.getJSONObject("origin").getString("name"));
-        characterIdDTO.setLocation(characterObject.getJSONObject("location").getString("name"));
-
-        // Obtener la longitud del array "episode" y asignarla al atributo "episodes" del objeto CharacterIdDTO
-        JSONArray resultsArray = characterObject.getJSONArray("episode");
-        characterIdDTO.setEpisodes(resultsArray.length());
-
-        // Devolver el objeto CharacterIdDTO completo con todos los detalles del personaje
-        return characterIdDTO;
-    }
-
-    private boolean meetsSearchCriteria(JSONObject characterObject, SearchFormDTO searchFormDTO) {
-        // Obtener los valores de los filtros de búsqueda del objeto SearchFormDTO
-        String nameFilter = searchFormDTO.getName();
-        String statusFilter = searchFormDTO.getStatus();
-        String speciesFilter = searchFormDTO.getSpecies();
-        String typeFilter = searchFormDTO.getType();
-        String genderFilter = searchFormDTO.getGender();
-
-        // Obtener los valores del personaje del objeto JSONObject
-        String name = characterObject.optString("name", "");
-        String status = characterObject.optString("status", "");
-        String species = characterObject.optString("species", "");
-        String type = characterObject.optString("type", "");
-        String gender = characterObject.optString("gender", "");
-
-        // Verificar si el personaje cumple con los criterios de búsqueda
-        boolean nameMatches = nameFilter == null || name.isEmpty() || name.equalsIgnoreCase(nameFilter);
-        boolean statusMatches = statusFilter == null || status.isEmpty() || status.equalsIgnoreCase(statusFilter);
-        boolean speciesMatches = speciesFilter == null || species.isEmpty() || species.equalsIgnoreCase(speciesFilter);
-        boolean typeMatches = typeFilter == null || type.isEmpty() || type.equalsIgnoreCase(typeFilter);
-        boolean genderMatches = genderFilter == null || gender.isEmpty() || gender.equalsIgnoreCase(genderFilter);
-
-        // Devolver true si el personaje cumple con todos los criterios de búsqueda, de lo contrario, devolver false
-        return nameMatches && statusMatches && speciesMatches && typeMatches && genderMatches;
-    }
-
-    public List<ValorationDTO> getValorationsByCharacterId(Long characterId) {
+    public List<ValorationDTO> getValorationsByCharacterId(Integer characterId) {
         // Consulta SQL para obtener las valoraciones por ID de personaje
         String sql = "SELECT name, valoration, comment FROM comentarios WHERE id_character = ?";
 
@@ -203,18 +103,9 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
         }
     }
 
-    public Double getAverageValorationByCharacterId(Long characterId) {
-        // Consulta SQL para obtener la media de las valoraciones por ID de personaje
-        String sql = "SELECT AVG(valoration) AS avg_valoration FROM comentarios WHERE id_character = ?";
-        // Ejecutar la consulta y obtener el resultado
-        Map<String, Object> result = jdbcTemplate.queryForMap(sql, characterId);
-        Object avgValorationObject = result.get("avg_valoration");
-        // Obtener la media de las valoraciones
-        BigDecimal averageValoration = (BigDecimal) result.get("avg_valoration");
-        // Convertir BigDecimal a Double
-        return averageValoration != null ? averageValoration.doubleValue() : 0;
+    public Double getAverageValorationByCharacterId(Integer characterId) {
+        return commetRepository.getAverageValoration(characterId);
     }
-
 
     public void createComment(CommentDTO commentDTO){
         Comment comment = new Comment();
@@ -224,7 +115,6 @@ public class RickAndMortyApiServiceImpl implements RickAndMortyApiService{
         comment.setValoration(commentDTO.getValoration());
         commetRepository.save(comment);
     }
-
 
     public  String getLastNumbersFromUrl(String url) {
         // Divide la URL en partes usando "/" como separador

@@ -16,4 +16,5 @@ public class SearchFormDTO {
     private String type;
     private String gender;
     private int pageSize;
+    private int page;
 }
